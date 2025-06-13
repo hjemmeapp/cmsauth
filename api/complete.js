@@ -9,7 +9,10 @@ export default async function handler(req, res) {
 
   const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
     body: JSON.stringify({ client_id, client_secret, code }),
   });
 
@@ -19,5 +22,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: data.error_description });
   }
 
-  res.status(200).json(data);
+  // ✅ Send token to CMS window via postMessage
+  res.send(`
+    <html>
+      <body>
+        <script>
+          window.opener.postMessage(${JSON.stringify(data)}, "*");
+          window.close();
+        </script>
+      </body>
+    </html>
+  `);
 }
